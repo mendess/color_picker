@@ -1,10 +1,21 @@
 [package]
 name = "color_picker"
-version = "0.1.0"
+version = "1.0.0"
 authors = ["Mendess2526 <pedro.mendes.26@gmail.com>"]
 edition = "2018"
+license = "MIT"
+description = "A simple terminal color picker"
+homepage = "https://github.com/Mendess2526/color_picker"
+repository = "https://github.com/Mendess2526/color_picker"
+exclude = [
+    "./demo.png",
+    "./README.md",
+]
+categories = ["command-line-utilities", "visualization"]
+keywords = ["cli", "color"]
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ansi_term = "*"
+ansi_term = "0.12"
