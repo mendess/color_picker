@@ -1,6 +1,10 @@
 use ansi_term::Color;
-use std::io::{self, stdin, BufRead, BufReader};
-use std::num::ParseIntError;
+use std::{
+    env,
+    io::{self, stdin, BufRead, BufReader},
+    num::ParseIntError,
+    str,
+};
 
 fn parse(color: &str) -> Result<Color, ParseIntError> {
     let color = color.trim_matches('#');
@@ -8,7 +12,7 @@ fn parse(color: &str) -> Result<Color, ParseIntError> {
         0 => Ok(Color::RGB(0, 0, 0)),
         1..=2 => Ok(Color::RGB(0, 0, u8::from_str_radix(color, 16)?)),
         3..=4 => {
-            let (g, b) = dbg!(color.split_at(color.len() - 2));
+            let (g, b) = color.split_at(color.len() - 2);
             Ok(Color::RGB(
                 0,
                 u8::from_str_radix(g, 16)?,
@@ -24,14 +28,32 @@ fn parse(color: &str) -> Result<Color, ParseIntError> {
                 u8::from_str_radix(b, 16)?,
             ))
         }
-        v => panic!("String too long: {}", v),
+        v => panic!("String '{}' too long: {}", color, v),
     }
 }
 
 fn main() -> io::Result<()> {
-    BufReader::new(stdin().lock())
-        .lines()
-        .try_for_each(|l| {
+    if env::args().any(|a| a == "-f" || a == "--find") {
+        BufReader::new(stdin().lock())
+            .split(b'#')
+            .enumerate()
+            .try_for_each(|(i, l)| {
+                l.and_then(|v| {
+                    str::from_utf8(&v)
+                        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+                        .and_then(|l| {
+                            if i != 0 {
+                                let c = parse(&l[..6])
+                                    .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+                                Ok(print!("{}{}{}", c.paint("#"), c.paint(&l[..6]), &l[6..]))
+                            } else {
+                                Ok(print!("{}", l))
+                            }
+                        })
+                })
+            })
+    } else {
+        BufReader::new(stdin().lock()).lines().try_for_each(|l| {
             l.and_then(|l| {
                 Ok(println!(
                     "{}",
@@ -41,6 +63,7 @@ fn main() -> io::Result<()> {
                 ))
             })
         })
+    }
 }
 
 mod test {

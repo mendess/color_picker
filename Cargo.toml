@@ -1,6 +1,6 @@
 [package]
 name = "color_picker"
-version = "1.0.2"
+version = "1.1.2"
 authors = ["Mendess2526 <pedro.mendes.26@gmail.com>"]
 edition = "2018"
 license = "MIT"
