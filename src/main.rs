@@ -33,37 +33,32 @@ fn parse(color: &str) -> Result<Color, ParseIntError> {
 }
 
 fn main() -> io::Result<()> {
-    if env::args().any(|a| a == "-f" || a == "--find") {
-        BufReader::new(stdin().lock())
-            .split(b'#')
-            .enumerate()
-            .try_for_each(|(i, l)| {
-                l.and_then(|v| {
-                    str::from_utf8(&v)
-                        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
-                        .and_then(|l| {
-                            if i != 0 {
-                                let c = parse(&l[..6])
-                                    .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-                                Ok(print!("{}{}{}", c.paint("#"), c.paint(&l[..6]), &l[6..]))
-                            } else {
-                                Ok(print!("{}", l))
-                            }
-                        })
-                })
-            })
-    } else {
-        BufReader::new(stdin().lock()).lines().try_for_each(|l| {
-            l.and_then(|l| {
-                Ok(println!(
-                    "{}",
-                    parse(&l)
-                        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?
-                        .paint(&l)
-                ))
-            })
+    let stdin = stdin();
+    let reader = BufReader::new(stdin.lock());
+    let _: io::Result<()> = if env::args().any(|a| a == "-f" || a == "--find") {
+        reader.split(b'#').enumerate().try_for_each(|(i, l)| {
+            let line = l?;
+            let l = str::from_utf8(&line)
+                .unwrap_or_else(|e| str::from_utf8(&line[..e.valid_up_to()]).unwrap());
+            if i != 0 {
+                let c = parse(&l[..6]).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+                Ok(print!("{}{}{}", c.paint("#"), c.paint(&l[..6]), &l[6..]))
+            } else {
+                Ok(print!("{}", l))
+            }
         })
-    }
+    } else {
+        reader.lines().try_for_each(|l| {
+            let l = l?;
+            Ok(println!(
+                "{}",
+                parse(&l)
+                    .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?
+                    .paint(&l)
+            ))
+        })
+    };
+    Ok(())
 }
 
 mod test {
